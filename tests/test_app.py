@@ -440,3 +440,36 @@ def test_mb52_header_after_title_on_second_sheet():
     rows, _ = parse_base(buf.getvalue())
     assert rows[0]["base"] == 10
     assert rows[0]["stock_value"] == 50
+
+
+def test_mb52_accepts_sap_total_and_empty_descriptive_fields():
+    raw = excel(
+        {
+            "MB52": [
+                HEADERS,
+                ["123", "", "", "1002", "0101", "", "", "", 10, 50],
+                [None, "", "", "", "", "", "", "", None, 50],
+            ]
+        }
+    ).getvalue()
+    rows, _ = parse_base(raw)
+    assert len(rows) == 1
+    assert rows[0]["code"] == "123"
+    assert rows[0]["description"] == ""
+    assert rows[0]["unit"] == ""
+    assert rows[0]["stock_value"] == 50
+
+
+def test_mb52_does_not_silently_skip_unidentified_material():
+    raw = excel(
+        {
+            "MB52": [
+                HEADERS,
+                [None, "Peça real", "UN", "1002", "0101", "", "", "", 10, 50],
+            ]
+        }
+    ).getvalue()
+    from werkzeug.exceptions import BadRequest
+
+    with pytest.raises(BadRequest, match="identificação incompleta"):
+        parse_base(raw)

@@ -89,6 +89,17 @@ def parse_base(raw):
                 continue
             v = [row[i] if i < len(row) else None for i in ix]
             text = lambda i: str(v[i]).strip() if v[i] is not None else ""
+            # A MB52 inclui um total financeiro ao final, sem identificação.
+            # Essa linha não é um material e não deve virar cadastro.
+            if (
+                not text(0)
+                and all(not text(i) for i in range(1, 8))
+                and v[8] in (None, "")
+            ):
+                if v[9] not in (None, ""):
+                    number(v[9])  # valida que se trata de um total numérico
+                continue
+
             if any(
                 len(text(i)) > limit
                 for i, limit in [(0, 80), (1, 150), (2, 20), (3, 30), (4, 30)]
@@ -98,8 +109,10 @@ def parse_base(raw):
             center = text(3)
             depot = text(4).zfill(4)
             key = (code, center, depot)
-            if not code or not center or not text(1) or not text(2):
-                raise BadRequest(f"Linha {line}: campos obrigatórios vazios.")
+            if not code or not center or not text(4):
+                raise BadRequest(
+                    f"Linha {line}: identificação incompleta: informe Material, Centro e Depósito."
+                )
             if key in seen:
                 raise BadRequest(f"Linha {line}: material/centro/depósito duplicado.")
             seen.add(key)
