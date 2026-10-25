@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#672f25" />
+    <meta
+      name="description"
+      content="Controle de estoque e saídas por ordem de serviço"
+    />
+    <link rel="manifest" href="/static/manifest.webmanifest" />
+    <link rel="icon" href="/static/icon.svg" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <title>Controle de Estoque</title>
+  </head>
+  <body>
+    <section id="login" class="login">
+      <form id="loginform" class="panel">
+        <div class="brandmark">CE</div>
+        <h1>Controle de Estoque</h1>
+        <p>Materiais e ordens de serviço</p>
+        <label
+          >Login<input
+            name="login"
+            autocomplete="username"
+            required
+            maxlength="80" /></label
+        ><label
+          >Senha<input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="200" /></label
+        ><button class="primary">Entrar</button>
+        <p id="loginerror" role="alert"></p>
+      </form>
+    </section>
+    <div id="app" hidden>
+      <header>
+        <div class="brand">
+          <span class="brandmark">CE</span>
+          <div>
+            <strong>Controle de Estoque</strong
+            ><small>Almoxarifado · Materiais e ordens de serviço</small>
+          </div>
+        </div>
+        <div class="toolbar">
+          <span id="who"></span><button id="theme">Claro / Escuro</button
+          ><button id="install">Instalar aplicativo</button
+          ><button id="logout">Sair</button>
+        </div>
+      </header>
+      <div class="layout">
+        <nav aria-label="Menu principal">
+          <button data-page="dashboard">Visão geral</button
+          ><button data-page="materials">Consulta de materiais</button
+          ><button data-page="entry">Novo atendimento</button
+          ><button data-page="history">Meus lançamentos</button
+          ><button data-page="import" class="admin">Atualizar base</button
+          ><button data-page="users" class="admin">Usuários</button
+          ><button data-page="reports" class="admin">Relatórios</button
+          ><button data-page="audit" class="admin">Auditoria</button>
+        </nav>
+        <main>
+          <div class="statusbar">
+            <span id="network"></span
+            ><button id="sync">Sincronizar / atualizar</button>
+          </div>
+          <div id="message" role="status" aria-live="polite"></div>
+          <div id="screen"></div>
+        </main>
+      </div>
+      <footer>Developed by Fernando Grava – 2026</footer>
+    </div>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

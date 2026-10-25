@@ -1,0 +1,10 @@
+.env*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+*.db
+.pytest_cache/
+.vercel/
+node_modules/
+package-lock.json
