@@ -400,3 +400,26 @@ def test_postgres_concurrent_withdrawals(client):
         results = list(pool.map(worker, range(2)))
     assert sorted(results) == [200, 409]
     assert client.get("/api/materials").json[0]["balance"] == "1.000"
+
+
+def test_production_tls_uses_bundled_ca(monkeypatch):
+    import certifi
+    from unittest.mock import Mock
+
+    captured = {}
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv(
+        "DATABASE_URL", "postgresql://example:placeholder@db.example.test/test"
+    )
+    monkeypatch.setattr(module, "engine", None)
+
+    def factory(url, **kwargs):
+        captured.update(kwargs)
+        return Mock()
+
+    monkeypatch.setattr(module, "create_engine", factory)
+    monkeypatch.setattr(module, "Session", lambda engine: Mock())
+    with module.app.app_context():
+        module.db()
+    assert captured["connect_args"]["sslmode"] == "verify-full"
+    assert captured["connect_args"]["sslrootcert"] == certifi.where()

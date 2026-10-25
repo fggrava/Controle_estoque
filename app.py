@@ -58,7 +58,9 @@ def db():
                 url = url.replace("postgresql://", "postgresql+psycopg://", 1)
             args = {"connect_timeout": 10}
             if os.environ.get("VERCEL"):
-                args.update(sslmode="verify-full", sslrootcert="system")
+                import certifi
+
+                args.update(sslmode="verify-full", sslrootcert=certifi.where())
             engine = create_engine(
                 url,
                 pool_pre_ping=True,
@@ -150,7 +152,21 @@ def invalid_input(e):
 
 @app.errorhandler(Exception)
 def error(e):
-    app.logger.error("Falha na requisição: %s", type(e).__name__)
+    category = type(e).__name__
+    original = getattr(e, "orig", None)
+    if original is not None:
+        description = str(original).lower()
+        if "certificate" in description or "ssl" in description:
+            category += ": TLS_CERTIFICATE"
+        elif "password authentication failed" in description:
+            category += ": DB_CREDENTIALS"
+        elif "timeout" in description or "timed out" in description:
+            category += ": DB_TIMEOUT"
+        elif "translate host name" in description:
+            category += ": DB_DNS"
+        else:
+            category += ": DB_CONNECTION"
+    app.logger.error("Falha na requisição: %s", category)
     return (
         jsonify(
             error="Não foi possível concluir a operação. Verifique a configuração ou tente novamente."

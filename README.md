@@ -98,7 +98,7 @@ Use a URL pooled dessa role em `DATABASE_URL`. Não conceda permissões a `PUBLI
 - Senhas scrypt, tokens de sessão aleatórios armazenados no banco somente por SHA-256, cookies HttpOnly/SameSite=Strict e Secure na Vercel; expiração de 12 horas.
 - CSRF por sessão, verificação de Origin, permissão e propriedade dos registros no servidor, SQL parametrizado via SQLAlchemy.
 - Rate limit persistente de 10 falhas por login a cada 15 minutos; habilite também regra de limite para `/api/login` no Firewall Vercel para mitigar ataques distribuídos a múltiplos logins.
-- HTTPS na hospedagem; conexão Neon em produção força `sslmode=verify-full` com certificados de sistema. Sem segredos em logs de erro ou respostas; parâmetros SQL ocultados.
+- HTTPS na hospedagem; conexão Neon em produção força `sslmode=verify-full` com pacote explícito de certificados CA (certifi). Sem segredos em logs de erro ou respostas; parâmetros SQL ocultados.
 - CSP sem scripts externos/inline, proteção contra embedding, MIME sniffing, APIs autenticadas com `Cache-Control: no-store`, exportação com neutralização de fórmulas injetadas.
 - Decimais no servidor, restrições do banco, bloqueio transacional para concorrência e idempotência por usuário/UUID para reenvios.
 - Auditoria e custo/descrição/código/unidade históricos em cada item. O usuário comum não pode apagar o histórico nem editar movimentações de outras pessoas.
