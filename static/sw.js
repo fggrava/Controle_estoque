@@ -1,5 +1,5 @@
 "use strict";
-const CACHE = "estoque-shell-v2";
+const CACHE = "estoque-shell-v3";
 const SHELL = [
   "/",
   "/static/style.css",

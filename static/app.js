@@ -433,10 +433,10 @@ async function loadDash() {
 }
 function paintCart() {
   $("#cart").innerHTML = table(
-    ["Material", "Quantidade", "Ação"],
+    ["Código da peça", "Material", "Quantidade", "Ação"],
     cart.map(
       (i, n) =>
-        `<tr><td>${esc(catalog.find((m) => m.id === i.material_id)?.description)}</td><td>${esc(i.quantity)}</td><td><button type="button" data-remove="${n}">Remover</button></td></tr>`,
+        `<tr><td>${esc(catalog.find((m) => m.id === i.material_id)?.code)}</td><td>${esc(catalog.find((m) => m.id === i.material_id)?.description)}</td><td>${esc(i.quantity)}</td><td><button type="button" data-remove="${n}">Remover</button></td></tr>`,
     ),
   );
 }
