@@ -543,7 +543,12 @@ def import_preview():
         needs_export=s.revision != s.exported,
         missing=len(set(previous.snapshot if previous else {}) - set(snapshot(rows))),
         sample=[
-            {**r, "base": str(r["base"]), "unit_cost": str(r["unit_cost"])}
+            {
+                **r,
+                "base": str(r["base"]),
+                "unit_cost": str(r["unit_cost"]),
+                "stock_value": str(r["stock_value"]),
+            }
             for r in rows[:8]
         ],
     )
@@ -590,6 +595,7 @@ def import_confirm():
     s.exported = 0
     s.started = now()
     for r in rows:
+        r.pop("stock_value", None)
         m = existing.get((r["code"], r["center"], r["depot"]))
         if not m:
             m = Material(**r, balance=r["base"])

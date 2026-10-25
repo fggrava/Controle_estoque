@@ -1,5 +1,5 @@
 "use strict";
-const CACHE = "estoque-shell-v1";
+const CACHE = "estoque-shell-v2";
 const SHELL = [
   "/",
   "/static/style.css",
@@ -10,7 +10,12 @@ const SHELL = [
   "/static/icon-512.png",
 ];
 self.addEventListener("install", (e) =>
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL))),
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(SHELL))
+      .then(() => self.skipWaiting()),
+  ),
 );
 self.addEventListener("activate", (e) =>
   e.waitUntil(

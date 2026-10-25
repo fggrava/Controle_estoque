@@ -21,7 +21,7 @@ HEADERS = [
 ]
 
 
-def norm(v):
+def normalized_text(v):
     return (
         "".join(
             c
@@ -31,6 +31,10 @@ def norm(v):
         .lower()
         .strip()
     )
+
+
+def norm(v):
+    return " ".join(normalized_text(v).split())
 
 
 def number(v):
@@ -58,16 +62,28 @@ def parse_base(raw):
         if sum(x.file_size for x in z.infolist()) > 40_000_000:
             raise BadRequest("Planilha expandida excede 40 MB.")
         wb = load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
-        ws = wb.active
-        rows = ws.iter_rows(values_only=True)
-        hdr = [norm(c) for c in next(rows)]
-        if not all(norm(h) in hdr for h in HEADERS):
-            raise BadRequest("Cabeçalhos obrigatórios: " + ", ".join(HEADERS))
+        rows = None
+        header_line = 0
+        for ws in wb.worksheets:
+            candidate = ws.iter_rows(values_only=True)
+            for header_line, row in enumerate(candidate, 1):
+                hdr = [norm(c) for c in row]
+                if all(norm(h) in hdr for h in HEADERS):
+                    rows = candidate
+                    break
+                if header_line >= 30:
+                    break
+            if rows is not None:
+                break
+        if rows is None:
+            raise BadRequest(
+                "Cabeçalhos obrigatórios nas primeiras 30 linhas: " + ", ".join(HEADERS)
+            )
         ix = [hdr.index(norm(h)) for h in HEADERS]
         out = []
         seen = set()
-        for line, row in enumerate(rows, 2):
-            if line > 10001:
+        for line, row in enumerate(rows, header_line + 1):
+            if len(out) >= 10000:
                 raise BadRequest("Limite: 10.000 materiais por base.")
             if not any(v is not None for v in row):
                 continue
@@ -104,6 +120,7 @@ def parse_base(raw):
                     deletion=text(6),
                     kind=text(7),
                     base=q,
+                    stock_value=value,
                     unit_cost=(value / q if q else Decimal(0)).quantize(
                         Decimal(".000001")
                     ),

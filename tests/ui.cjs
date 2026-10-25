@@ -69,6 +69,15 @@ const wait = () => new Promise((r) => setTimeout(r, 80));
   assert.equal(w.document.querySelector("#app").hidden, false);
   assert.ok(w.document.querySelector("input[name=start]"));
   assert.ok(w.document.querySelector("select[name=user]"));
+  w.document.querySelector("[data-page=import]").click();
+  await wait();
+  assert.match(w.document.querySelector("#screen").textContent, /MB52/);
+  assert.ok(w.document.querySelector("#exportfull"));
+  assert.ok(w.document.querySelector('input[type=file][accept=".xlsx"]'));
+  assert.match(
+    w.document.querySelector("#screen").textContent,
+    /Utilização livre/,
+  );
   w.document.querySelector("[data-page=entry]").click();
   await wait();
   online = false;

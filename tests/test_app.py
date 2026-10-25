@@ -423,3 +423,20 @@ def test_production_tls_uses_bundled_ca(monkeypatch):
         module.db()
     assert captured["connect_args"]["sslmode"] == "verify-full"
     assert captured["connect_args"]["sslrootcert"] == certifi.where()
+
+
+def test_mb52_header_after_title_on_second_sheet():
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    wb.active.title = "Capa"
+    wb.active.append(["Relatório SAP"])
+    ws = wb.create_sheet("MB52")
+    ws.append(["Posição de estoque"])
+    ws.append([h.replace(" ", "\n", 1) for h in HEADERS])
+    ws.append(["000123", "Peça", "UN", "1002", "0101", "Consumo", "", "VBRA", 10, 50])
+    buf = io.BytesIO()
+    wb.save(buf)
+    rows, _ = parse_base(buf.getvalue())
+    assert rows[0]["base"] == 10
+    assert rows[0]["stock_value"] == 50

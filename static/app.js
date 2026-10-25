@@ -333,7 +333,7 @@ async function render() {
     if (navigator.onLine) att = await api("attendances");
     s.innerHTML = `<h1>Meus lançamentos</h1><p>Atendimentos de hoje: <strong>${att.filter((a) => a.user_id === me.id && a.status === "active" && new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(a.created)) === today()).length}</strong></p>${attendanceTable(att.filter((a) => a.user_id === me.id))}`;
   } else if (page === "import") {
-    s.innerHTML = `<h1>Atualizar base de estoque</h1><div class="note">Ciclo ${state.cycle} · Desde ${new Date(state.started).toLocaleString("pt-BR")}<br>${state.revision === state.exported ? "Exportação em dia." : "Existem lançamentos ou alterações não exportados."}</div><button id="exportfull">Exportar ciclo completo em XLSX</button> <a href="/api/import/template">Baixar planilha modelo</a><form id="importform" class="panel"><label>Base completa XLSX (até 3 MB)<input type="file" name="file" accept=".xlsx" required></label><button>Validar e visualizar</button></form><div id="preview"></div>`;
+    s.innerHTML = `<h1>Importar estoque SAP · MB52</h1><p>Carregue a posição completa de estoque extraída da operação MB52 em formato .xlsx.</p><div class="panel"><h2>1. Exportar os lançamentos do período</h2><p>O período começa na última importação ou inserção da base. Todos os lançamentos e alterações desse ciclo precisam ser exportados antes da nova importação.</p></div><div class="note">Ciclo ${state.cycle} · Desde ${new Date(state.started).toLocaleString("pt-BR")}<br>${state.revision === state.exported ? "Exportação em dia." : "Existem lançamentos ou alterações não exportados."}</div><button id="exportfull">Exportar ciclo completo em XLSX</button> <a href="/api/import/template">Baixar planilha modelo</a><form id="importform" class="panel"><h2>2. Selecionar a planilha MB52</h2><details><summary>Colunas esperadas da MB52</summary><p>Material · Texto breve material · Unid.medida básica · Centro · Depósito · Denominação depósito · Marc.p/elim.nív.dep. · Tipo de material · Utilização livre · Val.utiliz.livre</p></details><p>A nova base substitui a posição completa; materiais ausentes serão inativados e terão saldo zerado, preservando o histórico.</p><label>Arquivo MB52 em XLSX (até 3 MB)<input type="file" name="file" accept=".xlsx" required></label><button>Validar e visualizar</button></form><div id="preview"></div>`;
     $("#exportfull").onclick = () => downloadExport(true);
     $("#importform").onsubmit = async (e) => {
       e.preventDefault();
@@ -343,13 +343,24 @@ async function render() {
           body: new FormData(e.target),
         });
         $("#preview").innerHTML =
-          `<div class="panel"><h2>Conferência da nova posição</h2><p>${preview.count} itens · ${preview.missing} itens ausentes serão inativados e zerados</p>${preview.needs_export ? '<div class="note">Exporte o ciclo antes de confirmar.</div>' : ""}${table(
-            ["Material", "Descrição", "Centro / Depósito", "Saldo"],
+          `<div class="panel"><h2>3. Conferir e confirmar a importação</h2><p>${preview.count} itens · ${preview.missing} itens ausentes serão inativados e zerados</p>${preview.needs_export ? '<div class="note">Exporte o ciclo antes de confirmar.</div>' : ""}${table(
+            [
+              "Material",
+              "Texto breve material",
+              "Unid.medida básica",
+              "Centro",
+              "Depósito",
+              "Denominação depósito",
+              "Marc.p/elim.nív.dep.",
+              "Tipo de material",
+              "Utilização livre",
+              "Val.utiliz.livre",
+            ],
             preview.sample.map(
               (m) =>
-                `<tr><td>${esc(m.code)}</td><td>${esc(m.description)}</td><td>${esc(m.center)}/${esc(m.depot)}</td><td>${esc(m.base)}</td></tr>`,
+                `<tr><td>${esc(m.code)}</td><td>${esc(m.description)}</td><td>${esc(m.unit)}</td><td>${esc(m.center)}</td><td>${esc(m.depot)}</td><td>${esc(m.depot_name)}</td><td>${esc(m.deletion)}</td><td>${esc(m.kind)}</td><td>${esc(m.base)}</td><td>${money(m.stock_value)}</td></tr>`,
             ),
-          )}${preview.same ? '<div class="note"><strong>Atenção: todos os saldos são iguais aos da base anterior.</strong> Verifique se o arquivo está atualizado.</div><label class="check"><input id="sameconfirm" type="checkbox">Confirmo a importação com saldos iguais.</label>' : ""}<label class="check"><input id="reconciled" type="checkbox">Confirmei que a posição importada já contempla as retiradas dos ciclos anteriores, inclusive as baixas no SAP. Elas não serão descontadas novamente.</label><button id="confirmbase" class="primary">Confirmar substituição da base</button></div>`;
+          )}${preview.same ? '<div class="note"><strong>Atenção: todos os saldos são iguais aos da base anterior.</strong> Verifique se o arquivo está atualizado.</div><label class="check"><input id="sameconfirm" type="checkbox">Confirmo a importação com saldos iguais.</label>' : ""}<label class="check"><input id="reconciled" type="checkbox">Confirmei que a posição importada já contempla as retiradas dos ciclos anteriores, inclusive as baixas no SAP. Elas não serão descontadas novamente.</label><button id="confirmbase" class="primary" ${preview.needs_export ? "disabled" : ""}>Confirmar substituição da base</button></div>`;
         $("#confirmbase").onclick = confirmBase;
       } catch (e) {
         message(e.message);
